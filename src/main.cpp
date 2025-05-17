@@ -1,5 +1,6 @@
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
+#include <PCH.h>
 
 namespace Hooks
 {
@@ -9,27 +10,64 @@ namespace Hooks
 		return std::filesystem::exists(filename);
 	}
 
+	static std::string ErrorMessage(DWORD errorCode)
+	{
+		std::string message;
+		LPVOID lpMsgBuf = nullptr;
+
+		if (FormatMessage(
+				FORMAT_MESSAGE_ALLOCATE_BUFFER |
+					FORMAT_MESSAGE_FROM_SYSTEM |
+					FORMAT_MESSAGE_IGNORE_INSERTS,
+				NULL,
+				errorCode,
+				MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+				(LPTSTR)&lpMsgBuf,
+				0,
+				NULL) == 0)
+		{
+			message = "Unable to parse error";
+		}
+		message = (LPCTSTR)lpMsgBuf;
+		LocalFree(lpMsgBuf);
+
+		return message;
+	}
 
 	static void Install()
 	{
-		REX::INFO("Loading UE4SS.dll");
+		REX::INFO("Finding 'UE4SS.dll'");
 
-		const char* fromRoot = "OblivionRemastered\\Binaries\\Win64\\ue4ss\\UE4SS.dll";
-		const char* fromExe = "ue4ss\\UE4SS.dll";
+		std::string fromGameRoot = "OblivionRemastered\\Binaries\\Win64\\ue4ss\\UE4SS.dll";
+		std::string fromGameExe = "ue4ss\\UE4SS.dll";
+		std::string dllPath;
 
-		if (FileExists(fromExe))
+		if (FileExists(fromGameExe))
 		{
-			REX::INFO("Loading from {}", fromExe);
-			LoadLibrary(fromExe);
+			dllPath = fromGameExe;
 		}
-		else if (FileExists(fromRoot))
+		else if (FileExists(fromGameRoot))
 		{
-			REX::INFO("Loading from {}", fromRoot);
-			LoadLibrary(fromRoot);
+			dllPath = fromGameRoot;
 		}
 		else
 		{
-			REX::WARN("Unable to load UE4SS.dll");
+			REX::CRITICAL("Unable to find 'UE4SS.dll' is ue4ss installed correctly?");
+		}
+
+		if (!dllPath.empty())
+		{
+			REX::INFO("Found 'UE4SS.dll' at '{}'", dllPath);
+			REX::INFO("Loading 'UE4SS.dll'");
+
+			if (!LoadLibrary(dllPath.c_str()))
+			{
+				REX::CRITICAL("Unable to load 'UE4SS.dll' error: {}", ErrorMessage(GetLastError()));
+			}
+			else
+			{
+				REX::INFO("Successfully loaded 'UE4SS.dll'");
+			}
 		}
 	}
 }
