@@ -17,20 +17,15 @@ namespace Utils
 		std::string message;
 		LPVOID lpMsgBuf = nullptr;
 
-		if (FormatMessage(
-				FORMAT_MESSAGE_ALLOCATE_BUFFER |
-					FORMAT_MESSAGE_FROM_SYSTEM |
-					FORMAT_MESSAGE_IGNORE_INSERTS,
-				NULL,
-				errorCode,
-				MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-				(LPTSTR)&lpMsgBuf,
-				0,
-				NULL) == 0)
+		if (FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, NULL, errorCode, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPTSTR)&lpMsgBuf, 0, NULL) == 0)
 		{
 			message = "Unable to parse error";
 		}
-		message = (LPCTSTR)lpMsgBuf;
+		else
+		{
+			message = (LPCTSTR)lpMsgBuf;
+		}
+
 		LocalFree(lpMsgBuf);
 
 		return message;
@@ -67,10 +62,10 @@ namespace Hooks
 		std::string UE4SS_fromGameRoot = GameRoot + UE4SS;
 		std::string UE4SS_fromGameExe = UE4SS;
 
-		// Path to found DLL
+		// Path to found DLL (if found)
 		std::string dllPath;
 
-		// Check if UE4SS is already loaded via existence of dwmapi.dll
+		// Check if UE4SS is already loaded via existence of dwmapi.dll (in the game root)
 		// If it is then don't bother trying to load any further
 		std::string dwmapiLocation = Utils::GetLoadedDLLPath(UE4SSLoader_DLL);
 		if (dwmapiLocation.contains("OblivionRemastered"))
@@ -91,31 +86,29 @@ namespace Hooks
 		{
 			dllPath = UE4SS_fromGameRoot;
 		}
-		else
+
+		// Unable to find UE4SS
+		if (dllPath.empty()) 
 		{
 			REX::CRITICAL("Unable to find 'UE4SS.dll' is ue4ss installed correctly?");
+			return;
 		}
+		
+		REX::INFO("Found 'UE4SS.dll' at '{}'", dllPath);
+		REX::INFO("Loading 'UE4SS.dll'");
 
-		// Load UE4SS if found
-		if (!dllPath.empty())
+		// Attempt Load UE4SS
+		if (!LoadLibrary(dllPath.c_str()))
 		{
-			REX::INFO("Found 'UE4SS.dll' at '{}'", dllPath);
-			REX::INFO("Loading 'UE4SS.dll'");
-
-			if (!LoadLibrary(dllPath.c_str()))
-			{
-				std::string errorString = Utils::GetErrorMessage(GetLastError());
-				REX::CRITICAL("Unable to load 'UE4SS.dll' ERROR: {}", errorString);
-			}
-			else
-			{
-				REX::INFO("Successfully loaded 'UE4SS.dll'");
-			}
+			std::string errorString = Utils::GetErrorMessage(GetLastError());
+			REX::CRITICAL("Unable to load 'UE4SS.dll' ERROR: {}", errorString);
+			return;
 		}
+
+		REX::INFO("Successfully loaded 'UE4SS.dll'");
 	}
 
 }
-
 
 /*
  * OBSE Entry
