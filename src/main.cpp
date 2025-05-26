@@ -75,6 +75,8 @@ namespace Hooks
 			return;
 		}
 
+		std::string cwd = std::filesystem::current_path().string();
+		REX::INFO("Current directory is '{}'", cwd);
 		REX::INFO("Locating 'UE4SS.dll'");
 
 		// Find UE4SS
