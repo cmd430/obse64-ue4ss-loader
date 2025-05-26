@@ -59,7 +59,7 @@ namespace Hooks
 		std::string UE4SS = UE4SSRoot + "\\" + UE4SS_DLL;
 
 		// UE4SS Paths
-		std::string UE4SS_fromGameRoot = GameRoot + UE4SS;
+		std::string UE4SS_fromGameRoot = GameRoot + "\\" + UE4SS;
 		std::string UE4SS_fromGameExe = UE4SS;
 
 		// Path to found DLL (if found)
