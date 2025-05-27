@@ -42,6 +42,20 @@ namespace Utils
 		return path;
 	}
 
+	static std::string GetBasePath() {
+		char* path = new char[MAX_PATH];
+
+		GetModuleFileName(NULL, path, MAX_PATH);
+		std::filesystem::path fullpath(path);
+
+		return fullpath.remove_filename().string();
+	}
+
+	static std::string GetWorkingPath()
+	{
+		return std::filesystem::current_path().string();
+	}
+
 }
 
 namespace Hooks
@@ -49,25 +63,17 @@ namespace Hooks
 
 	static void Install()
 	{
+		// Working Paths
+		std::string currentWorkingDirectory = Utils::GetWorkingPath();
+		std::string basePath = Utils::GetBasePath();
+
 		// UE4SS DLLs
-		std::string UE4SS_DLL = "UE4SS.dll";
-		std::string UE4SSLoader_DLL = "dwmapi.dll";
-
-		// Game Paths
-		std::string GameRoot = "OblivionRemastered\\Binaries\\Win64";
-		std::string UE4SSRoot = "ue4ss";
-		std::string UE4SS = UE4SSRoot + "\\" + UE4SS_DLL;
-
-		// UE4SS Paths
-		std::string UE4SS_fromGameRoot = GameRoot + "\\" + UE4SS;
-		std::string UE4SS_fromGameExe = UE4SS;
-
-		// Path to found DLL (if found)
-		std::string dllPath;
+		std::string UE4SSLoader = "dwmapi.dll";
+		std::string UE4SS = basePath + "ue4ss\\UE4SS.dll";
 
 		// Check if UE4SS is already loaded via existence of dwmapi.dll (in the game root)
 		// If it is then don't bother trying to load any further
-		std::string dwmapiLocation = Utils::GetLoadedDLLPath(UE4SSLoader_DLL);
+		std::string dwmapiLocation = Utils::GetLoadedDLLPath(UE4SSLoader);
 		if (dwmapiLocation.contains("OblivionRemastered"))
 		{
 			REX::CRITICAL("ERROR: 'dwmapi.dll' was loaded from game root, This MUST be deleted!");
@@ -75,32 +81,22 @@ namespace Hooks
 			return;
 		}
 
-		std::string cwd = std::filesystem::current_path().string();
-		REX::INFO("Current directory is '{}'", cwd);
-		REX::INFO("Locating 'UE4SS.dll'");
-
-		// Find UE4SS
-		if (Utils::FileExists(UE4SS_fromGameExe))
-		{
-			dllPath = UE4SS_fromGameExe;
-		}
-		else if (Utils::FileExists(UE4SS_fromGameRoot))
-		{
-			dllPath = UE4SS_fromGameRoot;
-		}
+		REX::INFO("Current directory is '{}'", currentWorkingDirectory);
+		REX::INFO("Base path is '{}'", basePath);
+		REX::INFO("Checking for 'UE4SS.dll'");
 
 		// Unable to find UE4SS
-		if (dllPath.empty()) 
+		if (!Utils::FileExists(UE4SS)) 
 		{
 			REX::CRITICAL("Unable to find 'UE4SS.dll' is ue4ss installed correctly?");
 			return;
 		}
 		
-		REX::INFO("Found 'UE4SS.dll' at '{}'", dllPath);
+		REX::INFO("Found 'UE4SS.dll' at '{}'", UE4SS);
 		REX::INFO("Loading 'UE4SS.dll'");
 
 		// Attempt Load UE4SS
-		if (!LoadLibrary(dllPath.c_str()))
+		if (!LoadLibrary(UE4SS.c_str()))
 		{
 			std::string errorString = Utils::GetErrorMessage(GetLastError());
 			REX::CRITICAL("Unable to load 'UE4SS.dll' ERROR: {}", errorString);
