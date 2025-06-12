@@ -30,6 +30,7 @@ namespace Utils
 		return message;
 	}
 
+	// Get path to a module (or to exe if not filename given)
 	static std::string GetModulePath(const std::string& filename = "")
 	{
 		HMODULE handle = GetModuleHandle(filename.empty() ? NULL : filename.c_str());
@@ -40,17 +41,20 @@ namespace Utils
 		return path;
 	}
 
+	// Get path of a loaded DLL by name
 	static std::string GetLoadedDLLPath(const std::string& filename)
 	{
 		return GetModulePath(filename);
 	}
 
+	// Get base path of current exe
 	static std::string GetBasePath() {
 		std::filesystem::path fullpath(GetModulePath());
 
 		return fullpath.remove_filename().string();
 	}
 
+	// Get CWD
 	static std::string GetWorkingPath()
 	{
 		return std::filesystem::current_path().string();
@@ -60,6 +64,7 @@ namespace Utils
 
 namespace Loader
 {
+
 	static void Init()
 	{
 		// Working Paths
@@ -107,9 +112,7 @@ namespace Loader
 
 }
 
-/*
- * OBSE Entry
- */
+// OBSE entry point
 OBSE_PLUGIN_PRELOAD(OBSE::PreLoadInterface* a_obse) 
 {
 	OBSE::Init(a_obse, { .hook = false });
