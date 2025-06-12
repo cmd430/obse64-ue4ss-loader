@@ -1,6 +1,5 @@
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
-#include <PCH.h>
 
 namespace Utils
 {
@@ -31,10 +30,9 @@ namespace Utils
 		return message;
 	}
 
-	// Get the path a loaded DLL was loaded from
-	static std::string GetLoadedDLLPath(const std::string& filename)
+	static std::string GetModulePath(const std::string& filename = "")
 	{
-		HMODULE handle = GetModuleHandle(filename.c_str());
+		HMODULE handle = GetModuleHandle(filename.empty() ? NULL : filename.c_str());
 		char* path = new char[MAX_PATH];
 
 		GetModuleFileName(handle, path, MAX_PATH);
@@ -42,11 +40,13 @@ namespace Utils
 		return path;
 	}
 
-	static std::string GetBasePath() {
-		char* path = new char[MAX_PATH];
+	static std::string GetLoadedDLLPath(const std::string& filename)
+	{
+		return GetModulePath(filename);
+	}
 
-		GetModuleFileName(NULL, path, MAX_PATH);
-		std::filesystem::path fullpath(path);
+	static std::string GetBasePath() {
+		std::filesystem::path fullpath(GetModulePath());
 
 		return fullpath.remove_filename().string();
 	}
@@ -58,10 +58,9 @@ namespace Utils
 
 }
 
-namespace Hooks
+namespace Loader
 {
-
-	static void Install()
+	static void Init()
 	{
 		// Working Paths
 		std::string currentWorkingDirectory = Utils::GetWorkingPath();
@@ -96,7 +95,7 @@ namespace Hooks
 		REX::INFO("Loading 'UE4SS.dll'");
 
 		// Attempt Load UE4SS
-		if (!LoadLibrary(UE4SS.c_str()))
+		if (!LoadLibrary(UE4SS.c_str())) 
 		{
 			std::string errorString = Utils::GetErrorMessage(GetLastError());
 			REX::CRITICAL("Unable to load 'UE4SS.dll' ERROR: {}", errorString);
@@ -111,21 +110,15 @@ namespace Hooks
 /*
  * OBSE Entry
  */
-static void MessageHandler(OBSE::MessagingInterface::Message* a_msg)
+OBSE_PLUGIN_PRELOAD(OBSE::PreLoadInterface* a_obse) 
 {
-	switch (a_msg->type)
+	OBSE::Init(a_obse, { .hook = false });
+	
+	// Only load if game, not editor
+	if (a_obse->IsEditor() == false)
 	{
-	case OBSE::MessagingInterface::kPostLoad:
-		Hooks::Install();
-		break;
-	default:
-		break;
+		Loader::Init();
 	}
-}
 
-OBSE_PLUGIN_LOAD(OBSE::LoadInterface* a_obse)
-{
-	OBSE::Init(a_obse);
-	OBSE::GetMessagingInterface()->RegisterListener(MessageHandler);
 	return true;
 }
