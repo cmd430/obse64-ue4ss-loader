@@ -56,7 +56,7 @@ namespace Loader
 
 		// UE4SS DLLs
 		std::string UE4SSLoader = "dwmapi.dll";
-		std::string UE4SS = currentWorkingDirectory + "ue4ss\\UE4SS.dll";
+		std::string UE4SS = currentWorkingDirectory + "\\ue4ss\\UE4SS.dll";
 
 		// Check if UE4SS is already loaded via existence of dwmapi.dll (in the game root)
 		// If it is then don't bother trying to load any further
