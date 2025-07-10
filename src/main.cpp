@@ -74,7 +74,7 @@ namespace Loader
 		// Unable to find UE4SS
 		if (!Utils::FileExists(UE4SS)) 
 		{
-			REX::CRITICAL("Unable to find 'UE4SS.dll' is ue4ss installed correctly?");
+			REX::CRITICAL("ERROR: Unable to find 'UE4SS.dll' is ue4ss installed correctly?");
 			return;
 		}
 		
@@ -85,7 +85,8 @@ namespace Loader
 		if (!LoadLibrary(UE4SS.c_str())) 
 		{
 			std::string errorString = Utils::GetErrorMessage(GetLastError());
-			REX::CRITICAL("Unable to load 'UE4SS.dll' ERROR: {}", errorString);
+			REX::CRITICAL("ERROR: Unable to load 'UE4SS.dll'");
+			REX::CRITICAL("{}", errorString);
 			return;
 		}
 
