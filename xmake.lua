@@ -6,7 +6,7 @@ includes("lib/commonlibob64")
 
 -- set project
 set_project("ue4ss_Loader")
-set_version("2.0.0")
+set_version("1.6.0")
 set_license("GPL-3.0")
 
 -- set defaults
