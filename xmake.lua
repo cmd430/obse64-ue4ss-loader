@@ -31,7 +31,13 @@ target("ue4ss_Loader")
     -- add commonlibob64 plugin
     add_rules("commonlibob64.plugin", {
         name = "ue4ss_Loader",
-        author = "xEpicBradx"
+        author = "xEpicBradx",
+        options = {
+          address_library = false,
+          layout_dependent = false,
+          no_struct_use = true,
+          sig_scanning = true
+        }
     })
 
     -- add source files
